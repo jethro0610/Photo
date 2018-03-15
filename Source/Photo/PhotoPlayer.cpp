@@ -46,6 +46,7 @@ void APhotoPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis("Mouse X", this, &APhotoPlayer::UpdateMouseX);
 	PlayerInputComponent->BindAxis("Mouse Y", this, &APhotoPlayer::UpdateMouseY);
 	PlayerInputComponent->BindAction("Test Input", EInputEvent::IE_Released, this, &APhotoPlayer::TestInputFunction);
+	PlayerInputComponent->BindAction("Test 2", EInputEvent::IE_Released, this, &APhotoPlayer::Test2Function);
 }
 
 void APhotoPlayer::UpdateMouseX(float axisValue) {
@@ -60,4 +61,9 @@ void APhotoPlayer::UpdateMouseY(float axisValue) {
 void APhotoPlayer::TestInputFunction() {
 	//snapshotComponent->TakeSnapshot();
 	photoCameraComponent->TakePhoto();
+}
+
+void APhotoPlayer::Test2Function() {
+	//snapshotComponent->TakeSnapshot();
+	photoCameraComponent->ExportPhotos();
 }

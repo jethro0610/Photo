@@ -49,4 +49,5 @@ public:
 	float cameraTilt;
 
 	void TestInputFunction();
+	void Test2Function();
 };

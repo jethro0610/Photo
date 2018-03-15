@@ -12,8 +12,16 @@ UPhotoCameraComponent::UPhotoCameraComponent()
 }
 
 void UPhotoCameraComponent::TakePhoto() {
-	TextureTarget->AdjustBrightness = 255.0f;
+	//TextureTarget->AdjustBrightness = 255.0f;
 	CaptureScene();
-	TextureTarget->AdjustBrightness = 255.0f;
-	UKismetRenderingLibrary::ExportRenderTarget(this, TextureTarget, "C:/Users/Jethro", "render.png");
+	//TextureTarget->AdjustBrightness = 255.0f;
+	//UKismetRenderingLibrary::ExportRenderTarget(this, TextureTarget, "C:/Users/Jethro", "render.png");
+
+	currentPhotographs.Add(FPhotograph(TextureTarget));
+}
+
+void UPhotoCameraComponent::ExportPhotos() {
+	for (int i = 0; i < currentPhotographs.Num(); i++) {
+		UKismetRenderingLibrary::ExportRenderTarget(this, TextureTarget, "C:/Users/Jet/Test", FString::FromInt(i) + ".png");
+	}
 }

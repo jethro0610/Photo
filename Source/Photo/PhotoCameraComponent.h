@@ -4,8 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "Exporters/TextureExporterBMP.h"
 #include "PhotoCameraComponent.generated.h"
+
+USTRUCT() 
+struct FPhotograph {
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UTextureRenderTarget2D* photograph;
+
+	FPhotograph() {
+		photograph = nullptr;
+	}
+
+	FPhotograph(UTextureRenderTarget2D* inputPhotograph) {
+		photograph = DuplicateObject<UTextureRenderTarget2D>(inputPhotograph, inputPhotograph->GetOuter(), FName(NAME_None));
+	}
+};
 
 /**
  * 
@@ -20,4 +37,7 @@ public:
 	UPhotoCameraComponent();
 	
 	void TakePhoto();
+	void ExportPhotos();
+
+	TArray<FPhotograph> currentPhotographs;
 };
