@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Public/TextureResource.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Exporters/TextureExporterBMP.h"
@@ -21,6 +22,10 @@ struct FPhotograph {
 
 	FPhotograph(UTextureRenderTarget2D* inputPhotograph) {
 		photograph = DuplicateObject<UTextureRenderTarget2D>(inputPhotograph, inputPhotograph->GetOuter(), FName(NAME_None));
+		FMemory::Memcpy(photograph->Source, inputPhotograph->Source);
+		FMemory::Memcpy(*photograph->Resource, *inputPhotograph->Resource);
+		FMemory::Memcpy(photograph->TextureReference, inputPhotograph->TextureReference);
+		photograph->UpdateResourceImmediate(false);
 	}
 };
 
@@ -35,7 +40,7 @@ class PHOTO_API UPhotoCameraComponent : public USceneCaptureComponent2D
 public:
 	// Sets default values for this component's properties
 	UPhotoCameraComponent();
-	
+
 	void TakePhoto();
 	void ExportPhotos();
 

@@ -22,6 +22,6 @@ void UPhotoCameraComponent::TakePhoto() {
 
 void UPhotoCameraComponent::ExportPhotos() {
 	for (int i = 0; i < currentPhotographs.Num(); i++) {
-		UKismetRenderingLibrary::ExportRenderTarget(this, TextureTarget, "C:/Users/Jet/Test", FString::FromInt(i) + ".png");
+		UKismetRenderingLibrary::ExportRenderTarget(this, currentPhotographs[i].photograph, "C:/Users/Jethro/Test", FString::FromInt(i) + ".png");
 	}
 }
