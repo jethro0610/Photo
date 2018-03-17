@@ -3,35 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Public/TextureResource.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Exporters/TextureExporterBMP.h"
+#include "Public/Misc/FileHelper.h"
+#include "Photograph.h"
 #include "PhotoCameraComponent.generated.h"
 
-USTRUCT() 
-struct FPhotograph {
-	GENERATED_BODY()
-
-	UPROPERTY()
-	UTextureRenderTarget2D* photograph;
-
-	FPhotograph() {
-		photograph = nullptr;
-	}
-
-	FPhotograph(UTextureRenderTarget2D* inputPhotograph) {
-		photograph = DuplicateObject<UTextureRenderTarget2D>(inputPhotograph, inputPhotograph->GetOuter(), FName(NAME_None));
-		FMemory::Memcpy(photograph->Source, inputPhotograph->Source);
-		FMemory::Memcpy(*photograph->Resource, *inputPhotograph->Resource);
-		FMemory::Memcpy(photograph->TextureReference, inputPhotograph->TextureReference);
-		photograph->UpdateResourceImmediate(false);
-	}
-};
-
-/**
- * 
- */
 UCLASS()
 class PHOTO_API UPhotoCameraComponent : public USceneCaptureComponent2D
 {
@@ -44,5 +21,5 @@ public:
 	void TakePhoto();
 	void ExportPhotos();
 
-	TArray<FPhotograph> currentPhotographs;
+	TArray<UPhotograph*> currentPhotographs;
 };

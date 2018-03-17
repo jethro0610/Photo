@@ -12,16 +12,17 @@ UPhotoCameraComponent::UPhotoCameraComponent()
 }
 
 void UPhotoCameraComponent::TakePhoto() {
-	//TextureTarget->AdjustBrightness = 255.0f;
 	CaptureScene();
-	//TextureTarget->AdjustBrightness = 255.0f;
-	//UKismetRenderingLibrary::ExportRenderTarget(this, TextureTarget, "C:/Users/Jethro", "render.png");
 
-	currentPhotographs.Add(FPhotograph(TextureTarget));
+	UPhotograph* photoToAdd = NewObject<UPhotograph>();
+	photoToAdd->UpdateFromRenderTarget(TextureTarget);
+
+	currentPhotographs.Add(photoToAdd);
 }
 
 void UPhotoCameraComponent::ExportPhotos() {
 	for (int i = 0; i < currentPhotographs.Num(); i++) {
-		UKismetRenderingLibrary::ExportRenderTarget(this, currentPhotographs[i].photograph, "C:/Users/Jethro/Test", FString::FromInt(i) + ".png");
+		FString filePath = "C:/Users/Jethro/Test/" + FString::FromInt(i + 1) + ".png";
+		FFileHelper::SaveArrayToFile(currentPhotographs[i]->image, *filePath);
 	}
 }
