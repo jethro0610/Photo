@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PhotoPlayer.h"
+#include "PlayerMovementComponent.h"
+#include "Engine.h"
 #include "Components/InputComponent.h"
 
 // Sets default values
@@ -19,6 +21,9 @@ APhotoPlayer::APhotoPlayer()
 
 	snapshotComponent = CreateDefaultSubobject<USnapshotComponent>("Snapshot Component");
 	photoCameraComponent = CreateDefaultSubobject<UPhotoCameraComponent>("Photo Component");
+
+	movementComponent = CreateDefaultSubobject<UPlayerMovementComponent>("Movement Component");
+	movementComponent->parentPlayer = this;
 }
 
 // Called when the game starts or when spawned
@@ -45,6 +50,8 @@ void APhotoPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAxis("Mouse X", this, &APhotoPlayer::UpdateMouseX);
 	PlayerInputComponent->BindAxis("Mouse Y", this, &APhotoPlayer::UpdateMouseY);
+	PlayerInputComponent->BindAxis("Move X", this, &APhotoPlayer::UpdateInputX);
+	PlayerInputComponent->BindAxis("Move Y", this, &APhotoPlayer::UpdateInputY);
 	PlayerInputComponent->BindAction("Test Input", EInputEvent::IE_Released, this, &APhotoPlayer::TestInputFunction);
 	PlayerInputComponent->BindAction("Test 2", EInputEvent::IE_Released, this, &APhotoPlayer::Test2Function);
 }
@@ -58,6 +65,14 @@ void APhotoPlayer::UpdateMouseY(float axisValue) {
 	cameraTilt = FMath::Clamp(cameraTilt, -85.0f, 85.0f);
 }
 
+void APhotoPlayer::UpdateInputX(float axisValue) {
+	xInputAxis = axisValue;
+}
+
+void APhotoPlayer::UpdateInputY(float axisValue) {
+	yInputAxis = axisValue;
+}
+
 void APhotoPlayer::TestInputFunction() {
 	//snapshotComponent->TakeSnapshot();
 	photoCameraComponent->TakePhoto();
@@ -66,4 +81,22 @@ void APhotoPlayer::TestInputFunction() {
 void APhotoPlayer::Test2Function() {
 	//snapshotComponent->TakeSnapshot();
 	photoCameraComponent->ExportPhotos();
+}
+
+bool APhotoPlayer::IsOnGround(float maxDistance) {
+	FHitResult traceOutput;
+	FCollisionQueryParams ignoreParams;
+	ignoreParams.AddIgnoredActor(this);
+	ignoreParams.AddIgnoredComponent(collisionBox);
+	GetWorld()->LineTraceSingleByChannel(traceOutput, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
+	return traceOutput.IsValidBlockingHit();
+}
+
+FVector APhotoPlayer::GetGroundNormal(float maxDistance) {
+	FHitResult traceOutput;
+	FCollisionQueryParams ignoreParams;
+	ignoreParams.AddIgnoredActor(this);
+	ignoreParams.AddIgnoredComponent(collisionBox);
+	GetWorld()->LineTraceSingleByChannel(traceOutput, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
+	return traceOutput.Normal;
 }

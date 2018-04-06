@@ -10,6 +10,7 @@
 #include "PhotoCameraComponent.h"
 #include "PhotoPlayer.generated.h"
 
+class UPlayerMovementComponent;
 UCLASS()
 class PHOTO_API APhotoPlayer : public APawn
 {
@@ -50,4 +51,15 @@ public:
 
 	void TestInputFunction();
 	void Test2Function();
+
+	UPROPERTY(EditAnywhere)
+		UPlayerMovementComponent* movementComponent;
+
+	float xInputAxis;
+	float yInputAxis;
+	void UpdateInputX(float axisValue);
+	void UpdateInputY(float axisValue);
+
+	bool IsOnGround(float maxDistance);
+	FVector GetGroundNormal(float maxDistance);
 };
