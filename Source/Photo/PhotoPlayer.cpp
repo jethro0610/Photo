@@ -83,6 +83,8 @@ void APhotoPlayer::Test2Function() {
 	photoCameraComponent->ExportPhotos();
 }
 
+
+
 bool APhotoPlayer::IsOnGround(float maxDistance) {
 	FHitResult traceOutput;
 	FCollisionQueryParams ignoreParams;

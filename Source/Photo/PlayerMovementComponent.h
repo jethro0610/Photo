@@ -33,13 +33,13 @@ public:
 	FVector velocity;
 	
 	UPROPERTY(EditAnywhere)
-		float gravitySpeed;
+		float gravitySpeed = 0.1f;
 
 	UPROPERTY(EditAnywhere)
-		float acceleration;
+		float acceleration = 0.3f;
 
 	UPROPERTY(EditAnywhere)
-		float deceleration;
+		float deceleration = 12.0f;
 
 	FVector GetRelativeVector(FVector inputVector);
 	void ApplyMovement(FVector desiredMovement);
