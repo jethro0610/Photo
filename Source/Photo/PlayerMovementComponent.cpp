@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PlayerMovementComponent.h"
-
+#include "Engine.h"
 
 // Sets default values for this component's properties
 UPlayerMovementComponent::UPlayerMovementComponent()
@@ -33,27 +33,22 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		velocity.Z = 0.0f;
 	}
 
-	velocity.X += (acceleration*parentPlayer->xInputAxis) - (velocity.X / deceleration);
-	velocity.Y += (acceleration*parentPlayer->yInputAxis) - (velocity.Y / deceleration);
+	velocity += (parentPlayer->GetActorForwardVector() * (parentPlayer->yInputAxis* acceleration));
+	velocity += (parentPlayer->GetActorRightVector() * (parentPlayer->xInputAxis* acceleration));
+	velocity -= (FVector(velocity.X, velocity.Y, 0.0f) / deceleration);
 
-	ApplyMovement(GetRelativeVector(velocity));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(moveYAxis));
+
+	ApplyMovementSliding(velocity);
 }
 
-FVector UPlayerMovementComponent::GetRelativeVector(FVector inputVector) {
-	FVector relativeX = parentPlayer->GetActorRightVector() * inputVector.X;
-	FVector relativeY = parentPlayer->GetActorForwardVector() * inputVector.Y;
-	FVector relativeZ = parentPlayer->GetActorUpVector() * inputVector.Z;
-
-	return relativeX + relativeY + relativeZ;
-}
-
-void UPlayerMovementComponent::ApplyMovement(FVector desiredVector) {
+void UPlayerMovementComponent::ApplyMovementSliding(FVector desiredVector) {
 	FHitResult movementHit;
 
 	parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + FVector::VectorPlaneProject(desiredVector,parentPlayer->GetGroundNormal(150.0f)), true, &movementHit);
 
 	if (movementHit.IsValidBlockingHit()) {
-		FVector slideVector = FVector::VectorPlaneProject(desiredVector, movementHit.Normal);
-		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + slideVector, true, &movementHit);
+		FVector slideNormal = FVector::VectorPlaneProject(desiredVector, movementHit.Normal);
+		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + slideNormal, true, &movementHit);
 	}
 }
