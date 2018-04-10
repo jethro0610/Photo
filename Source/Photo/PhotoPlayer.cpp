@@ -3,6 +3,7 @@
 #include "PhotoPlayer.h"
 #include "PlayerMovementComponent.h"
 #include "Engine.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
 
 // Sets default values
@@ -12,6 +13,7 @@ APhotoPlayer::APhotoPlayer()
 	PrimaryActorTick.bCanEverTick = true;
 
 	collisionCapsule = CreateDefaultSubobject<UCapsuleComponent>("Collider");
+	collisionCapsule->SetCollisionProfileName("BlockAll");
 	RootComponent = collisionCapsule;
 	
 	camera = CreateDefaultSubobject<UCameraComponent>("Camera");
@@ -36,11 +38,20 @@ void APhotoPlayer::BeginPlay()
 void APhotoPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	SetActorRotation(FRotator(0.0f, cameraPan, 0.0f));
-	camera->SetRelativeRotation(FRotator(cameraTilt, 0.0f, 0.0f));
+
+	if (lockOnActor == nullptr) {
+		SetActorRotation(FRotator(0.0f, cameraPan, 0.0f));
+		camera->SetRelativeRotation(FRotator(cameraTilt, 0.0f, 0.0f));
+	}
+	else {
+		FRotator targetRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), lockOnActor->GetActorLocation());
+		SetActorRotation(FRotator(0, targetRotation.Yaw, 0));
+		camera->SetRelativeRotation(FRotator(targetRotation.Pitch, 0, 0));
+	}
 
 	photoCameraComponent->SetWorldLocation(camera->GetComponentLocation());
-	photoCameraComponent->SetWorldRotation(camera->GetComponentRotation());
+	photoCameraComponent->SetWorldRotation(camera->GetComponentRotation()); 
+
 }
 
 // Called to bind functionality to input
@@ -92,9 +103,9 @@ bool APhotoPlayer::IsOnGround(float maxDistance) {
 	ignoreParams.AddIgnoredActor(this);
 	ignoreParams.AddIgnoredComponent(collisionCapsule);
 
-	GetWorld()->LineTraceSingleByChannel(traceOutput, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
+	GetWorld()->LineTraceSingleByChannel(traceOutputM, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
 
-	return traceOutput.IsValidBlockingHit();
+	return traceOutputM.IsValidBlockingHit();
 }
 
 FVector APhotoPlayer::GetGroundNormal(float maxDistance) {

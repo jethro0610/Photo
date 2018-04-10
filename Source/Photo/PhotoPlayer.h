@@ -55,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		UPlayerMovementComponent* movementComponent;
 
+	UPROPERTY(EditAnywhere)
+		AActor* lockOnActor;
+
 	float xInputAxis;
 	float yInputAxis;
 	void UpdateInputX(float axisValue);

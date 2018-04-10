@@ -30,12 +30,14 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	if (!parentPlayer->IsOnGround(50.0f)) {
 		velocity.Z -= gravitySpeed * deltaDifference;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(velocity.Z));
 	}
 	else {
 		velocity.Z = 0.0f;
 		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() - (parentPlayer->GetActorUpVector()*50.0f), true);
 	}
 
+	
 
 	if (parentPlayer->IsOnGround(50.0f)) {
 		velocity += (parentPlayer->GetActorForwardVector() * (parentPlayer->yInputAxis* acceleration)) * deltaDifference;
@@ -48,8 +50,13 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 void UPlayerMovementComponent::ApplyMovementSliding(FVector desiredVector, float deltaDifference) {
 	FHitResult movementHit;
 	FVector deltaVector = desiredVector * deltaDifference;
-	parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + FVector::VectorPlaneProject(deltaVector, parentPlayer->GetGroundNormal(50.0f)), true, &movementHit);
 
+	if (parentPlayer->IsOnGround(50.0f)) {
+		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + FVector::VectorPlaneProject(deltaVector, parentPlayer->GetGroundNormal(50.0f)), true, &movementHit);
+	}
+	else{
+		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + deltaVector, true, &movementHit);
+	}
 	if (movementHit.IsValidBlockingHit()) {
 		FVector slideNormal = FVector::VectorPlaneProject(deltaVector, movementHit.Normal);
 		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + slideNormal, true, &movementHit);
