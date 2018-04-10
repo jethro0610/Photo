@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
-#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "SnapshotComponent.h"
 #include "PhotoCameraComponent.h"
 #include "PhotoPlayer.generated.h"
@@ -32,7 +32,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(EditAnywhere)
-		UBoxComponent* collisionBox;
+		UCapsuleComponent* collisionCapsule;
 
 	UPROPERTY(EditAnywhere)
 		UCameraComponent* camera;

@@ -11,9 +11,8 @@ APhotoPlayer::APhotoPlayer()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	collisionBox = CreateDefaultSubobject<UBoxComponent>("Collider");
-	collisionBox->SetBoxExtent(FVector(32.0f, 32.0f, 64.0f));
-	RootComponent = collisionBox;
+	collisionCapsule = CreateDefaultSubobject<UCapsuleComponent>("Collider");
+	RootComponent = collisionCapsule;
 	
 	camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	camera->AttachTo(RootComponent);
@@ -74,23 +73,27 @@ void APhotoPlayer::UpdateInputY(float axisValue) {
 }
 
 void APhotoPlayer::TestInputFunction() {
-	//snapshotComponent->TakeSnapshot();
 	photoCameraComponent->TakePhoto();
 }
 
 void APhotoPlayer::Test2Function() {
-	//snapshotComponent->TakeSnapshot();
 	photoCameraComponent->ExportPhotos();
 }
 
 
 
 bool APhotoPlayer::IsOnGround(float maxDistance) {
-	FHitResult traceOutput;
+	FHitResult traceOutputM;
+	FHitResult traceOutputF;
+	FHitResult traceOutputB;
+	FHitResult traceOutputL;
+	FHitResult traceOutputR;
 	FCollisionQueryParams ignoreParams;
 	ignoreParams.AddIgnoredActor(this);
-	ignoreParams.AddIgnoredComponent(collisionBox);
+	ignoreParams.AddIgnoredComponent(collisionCapsule);
+
 	GetWorld()->LineTraceSingleByChannel(traceOutput, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
+
 	return traceOutput.IsValidBlockingHit();
 }
 
@@ -98,7 +101,9 @@ FVector APhotoPlayer::GetGroundNormal(float maxDistance) {
 	FHitResult traceOutput;
 	FCollisionQueryParams ignoreParams;
 	ignoreParams.AddIgnoredActor(this);
-	ignoreParams.AddIgnoredComponent(collisionBox);
+	ignoreParams.AddIgnoredComponent(collisionCapsule);
+
 	GetWorld()->LineTraceSingleByChannel(traceOutput, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
+
 	return traceOutput.Normal;
 }

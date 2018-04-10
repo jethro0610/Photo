@@ -26,29 +26,32 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!parentPlayer->IsOnGround(150.0f)) {
-		velocity.Z -= gravitySpeed;
+	float deltaDifference = DeltaTime * 60.0f;
+
+	if (!parentPlayer->IsOnGround(50.0f)) {
+		velocity.Z -= gravitySpeed * deltaDifference;
 	}
 	else {
 		velocity.Z = 0.0f;
+		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() - (parentPlayer->GetActorUpVector()*50.0f), true);
 	}
 
-	velocity += (parentPlayer->GetActorForwardVector() * (parentPlayer->yInputAxis* acceleration));
-	velocity += (parentPlayer->GetActorRightVector() * (parentPlayer->xInputAxis* acceleration));
-	velocity -= (FVector(velocity.X, velocity.Y, 0.0f) / deceleration);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(moveYAxis));
-
-	ApplyMovementSliding(velocity);
+	if (parentPlayer->IsOnGround(50.0f)) {
+		velocity += (parentPlayer->GetActorForwardVector() * (parentPlayer->yInputAxis* acceleration)) * deltaDifference;
+		velocity += (parentPlayer->GetActorRightVector() * (parentPlayer->xInputAxis* acceleration)) * deltaDifference;
+		velocity -= (FVector(velocity.X, velocity.Y, 0.0f) / deceleration) * deltaDifference;
+	}
+	ApplyMovementSliding(velocity, deltaDifference);
 }
 
-void UPlayerMovementComponent::ApplyMovementSliding(FVector desiredVector) {
+void UPlayerMovementComponent::ApplyMovementSliding(FVector desiredVector, float deltaDifference) {
 	FHitResult movementHit;
-
-	parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + FVector::VectorPlaneProject(desiredVector,parentPlayer->GetGroundNormal(150.0f)), true, &movementHit);
+	FVector deltaVector = desiredVector * deltaDifference;
+	parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + FVector::VectorPlaneProject(deltaVector, parentPlayer->GetGroundNormal(50.0f)), true, &movementHit);
 
 	if (movementHit.IsValidBlockingHit()) {
-		FVector slideNormal = FVector::VectorPlaneProject(desiredVector, movementHit.Normal);
+		FVector slideNormal = FVector::VectorPlaneProject(deltaVector, movementHit.Normal);
 		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + slideNormal, true, &movementHit);
 	}
 }
