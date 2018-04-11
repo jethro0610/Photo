@@ -33,8 +33,10 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(velocity.Z));
 	}
 	else {
-		velocity.Z = 0.0f;
-		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() - (parentPlayer->GetActorUpVector()*50.0f), true);
+		if (velocity.Z <= 0.0f)
+			velocity.Z = 0.0f;
+
+		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() - (parentPlayer->GetActorUpVector()*(2.0f*deltaDifference)), true);
 	}
 
 	if (parentPlayer->IsOnGround(50.0f)) {
@@ -63,5 +65,4 @@ void UPlayerMovementComponent::MoveSliding(FVector desiredVector, float deltaDif
 
 void UPlayerMovementComponent::Jump(float height, FVector direction) {
 	velocity = (parentPlayer->GetActorUpVector()*height) + direction;
-	parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + (parentPlayer->GetActorUpVector()*8.0f), true);
 }
