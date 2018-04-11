@@ -44,6 +44,4 @@ public:
 	void MoveSliding(FVector desiredMovement, float deltaDifference);
 
 	void Jump(float height, FVector direction);
-
-	float jumpTimer;
 };
