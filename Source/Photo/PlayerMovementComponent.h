@@ -41,5 +41,7 @@ public:
 	UPROPERTY(EditAnywhere)
 		float deceleration = 6.0f;
 
-	void ApplyMovementSliding(FVector desiredMovement, float deltaDifference);
+	void MoveSliding(FVector desiredMovement, float deltaDifference);
+
+	void Jump(float height, FVector direction);
 };

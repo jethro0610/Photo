@@ -37,17 +37,15 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() - (parentPlayer->GetActorUpVector()*50.0f), true);
 	}
 
-	
-
 	if (parentPlayer->IsOnGround(50.0f)) {
 		velocity += (parentPlayer->GetActorForwardVector() * (parentPlayer->yInputAxis* acceleration)) * deltaDifference;
 		velocity += (parentPlayer->GetActorRightVector() * (parentPlayer->xInputAxis* acceleration)) * deltaDifference;
 		velocity -= (FVector(velocity.X, velocity.Y, 0.0f) / deceleration) * deltaDifference;
 	}
-	ApplyMovementSliding(velocity, deltaDifference);
+	MoveSliding(velocity, deltaDifference);
 }
 
-void UPlayerMovementComponent::ApplyMovementSliding(FVector desiredVector, float deltaDifference) {
+void UPlayerMovementComponent::MoveSliding(FVector desiredVector, float deltaDifference) {
 	FHitResult movementHit;
 	FVector deltaVector = desiredVector * deltaDifference;
 
@@ -61,4 +59,9 @@ void UPlayerMovementComponent::ApplyMovementSliding(FVector desiredVector, float
 		FVector slideNormal = FVector::VectorPlaneProject(deltaVector, movementHit.Normal);
 		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + slideNormal, true, &movementHit);
 	}
+}
+
+void UPlayerMovementComponent::Jump(float height, FVector direction) {
+	velocity = (parentPlayer->GetActorUpVector()*height) + direction;
+	parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + (parentPlayer->GetActorUpVector()*8.0f), true);
 }

@@ -63,6 +63,8 @@ public:
 	void UpdateInputX(float axisValue);
 	void UpdateInputY(float axisValue);
 
+	void JumpInput();
+
 	bool IsOnGround(float maxDistance);
 	FVector GetGroundNormal(float maxDistance);
 };
