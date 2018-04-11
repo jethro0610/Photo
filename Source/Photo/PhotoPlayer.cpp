@@ -64,7 +64,7 @@ void APhotoPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis("Move Y", this, &APhotoPlayer::UpdateInputY);
 	PlayerInputComponent->BindAction("Test Input", EInputEvent::IE_Released, this, &APhotoPlayer::TestInputFunction);
 	PlayerInputComponent->BindAction("Test 2", EInputEvent::IE_Released, this, &APhotoPlayer::Test2Function);
-	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Released, this, &APhotoPlayer::JumpInput)
+	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Released, this, &APhotoPlayer::JumpInput);
 }
 
 void APhotoPlayer::UpdateMouseX(float axisValue) {
@@ -94,7 +94,7 @@ void APhotoPlayer::Test2Function() {
 
 void APhotoPlayer::JumpInput() {
 	if (IsOnGround(50.0f)) {
-		movementComponent->Jump(60.0f, FVector(xInputAxis , yInputAxis, 0.0f) * 50.0f);
+		movementComponent->Jump(15.0f, FVector(xInputAxis , yInputAxis, 0.0f) * 0.0f);
 	}
 }
 
