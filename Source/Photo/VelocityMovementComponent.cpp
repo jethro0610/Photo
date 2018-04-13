@@ -103,6 +103,11 @@ void UVelocityMovementComponent::MoveSliding(FVector deltaLocation, float deltaT
 	}
 
 	while (movementHit.IsValidBlockingHit()) {
+		if (movementHit.GetActor()->IsValidLowLevel() && movementHit.GetActor()->IsA(UPrimitiveComponent::StaticClass())) {
+			UPrimitiveComponent* hitObject = Cast<UPrimitiveComponent, AActor>(movementHit.GetActor());
+			if(hitObject->IsSimulatingPhysics())
+				hitObject->AddForceAtLocation(deltaLocation, movementHit.Location);
+		}
 		FVector slideNormal = FVector::VectorPlaneProject(deltaVector, movementHit.Normal);
 		GetOwner()->SetActorLocation(GetOwner()->GetActorLocation() + slideNormal, true, &movementHit);
 	}
