@@ -94,9 +94,9 @@ void APhotoPlayer::Test2Function() {
 
 void APhotoPlayer::JumpInput() {
 	if (IsOnGround(50.0f)) {
-		FVector forwardHop = yInputAxis * 30.0f * GetActorForwardVector();
-		FVector sideHop = xInputAxis * 30.0f * GetActorRightVector();
-		movementComponent->Jump(0.0f, forwardHop + sideHop);
+		FVector forwardHop = yInputAxis * 8.0f * GetActorForwardVector();
+		FVector sideHop = xInputAxis * 8.0f * GetActorRightVector();
+		movementComponent->Jump(5.0f, forwardHop + sideHop);
 	}
 }
 
