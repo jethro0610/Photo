@@ -25,7 +25,7 @@ void UPlayerMovementComponent::BeginPlay()
 void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	/*
 	float deltaDifference = DeltaTime * 60.0f;
 
 	if (!parentPlayer->IsOnGround(50.0f)) {
@@ -47,9 +47,11 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		velocity -= (FVector(velocity.X, velocity.Y, 0.0f) / deceleration) * deltaDifference;
 	}
 	MoveSliding(velocity, deltaDifference);
+	*/
 }
 
 void UPlayerMovementComponent::MoveSliding(FVector desiredVector, float deltaDifference) {
+	/*
 	FHitResult movementHit;
 	FVector deltaVector = desiredVector * deltaDifference;
 
@@ -63,8 +65,9 @@ void UPlayerMovementComponent::MoveSliding(FVector desiredVector, float deltaDif
 		FVector slideNormal = FVector::VectorPlaneProject(deltaVector, movementHit.Normal);
 		parentPlayer->SetActorLocation(parentPlayer->GetActorLocation() + slideNormal, true, &movementHit);
 	}
+	*/
 }
 
 void UPlayerMovementComponent::Jump(float height, FVector direction) {
-	velocity = (parentPlayer->GetActorUpVector()*height) + direction;
+	//velocity = (parentPlayer->GetActorUpVector()*height) + direction;
 }

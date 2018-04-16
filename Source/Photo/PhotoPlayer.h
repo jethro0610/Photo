@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
+#include "VelocityMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "SnapshotComponent.h"
 #include "PhotoCameraComponent.h"
 #include "PhotoPlayer.generated.h"
 
-class UPlayerMovementComponent;
 UCLASS()
 class PHOTO_API APhotoPlayer : public APawn
 {
@@ -53,7 +53,7 @@ public:
 	void Test2Function();
 
 	UPROPERTY(EditAnywhere)
-		UPlayerMovementComponent* movementComponent;
+		UVelocityMovementComponent* movementComponent;
 
 	UPROPERTY(EditAnywhere)
 		AActor* lockOnActor;
@@ -64,7 +64,4 @@ public:
 	void UpdateInputY(float axisValue);
 
 	void JumpInput();
-
-	bool IsOnGround(float maxDistance);
-	FVector GetGroundNormal(float maxDistance);
 };

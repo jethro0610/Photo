@@ -6,11 +6,7 @@
 // Sets default values for this component's properties
 UVelocityMovementComponent::UVelocityMovementComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 
@@ -19,7 +15,7 @@ void UVelocityMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	acceleration = maxWalkSpeed * friction;
 }
 
 
@@ -33,12 +29,11 @@ void UVelocityMovementComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		AddVelocity((-GetVelocityXY() * friction) * deltaTick);
 		if (GetGravity() < 0.0f) {
 			SetGravity(0.0f);
-			GetOwner()->SetActorLocation(GetOwner()->GetActorLocation() + (GetOwner()->GetActorUpVector() * (2.0f * deltaTick)), true);
+			GetOwner()->SetActorLocation(GetOwner()->GetActorLocation() + (GetOwner()->GetActorUpVector() * (-2.0f * deltaTick)), true);
 		}
 	}
 	else {
 		AddGravity(-gravitySpeed);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::SanitizeFloat(GetGravity()));
 	}
 
 	MoveSliding(GetVelocity(), deltaTick);
@@ -49,6 +44,7 @@ FHitResult UVelocityMovementComponent::GetGroundTrace() {
 
 	FCollisionQueryParams traceParams;
 	traceParams.AddIgnoredActor(GetOwner());
+	traceParams.AddIgnoredComponent(Cast<UPrimitiveComponent, USceneComponent>(GetOwner()->GetRootComponent()));
 
 	GetWorld()->LineTraceSingleByChannel(groundTrace, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + (GetOwner()->GetActorUpVector() * -groundDistance), ECC_WorldStatic, traceParams);
 

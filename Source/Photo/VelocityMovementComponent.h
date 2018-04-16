@@ -38,6 +38,11 @@ public:
 	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "0.0"))
 		float friction;
 
+	UPROPERTY(EditAnywhere)
+		float maxWalkSpeed;
+
+	float acceleration;
+
 	FVector GetVelocity();
 	FVector GetVelocityXY();
 	float GetGravity();

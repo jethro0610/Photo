@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PhotoPlayer.h"
-#include "PlayerMovementComponent.h"
 #include "Engine.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/InputComponent.h"
@@ -23,8 +22,10 @@ APhotoPlayer::APhotoPlayer()
 	snapshotComponent = CreateDefaultSubobject<USnapshotComponent>("Snapshot Component");
 	photoCameraComponent = CreateDefaultSubobject<UPhotoCameraComponent>("Photo Component");
 
-	movementComponent = CreateDefaultSubobject<UPlayerMovementComponent>("Movement Component");
-	movementComponent->parentPlayer = this;
+	movementComponent = CreateDefaultSubobject<UVelocityMovementComponent>("Movement Component");
+	movementComponent->gravitySpeed = 0.25f;
+	movementComponent->friction = 0.2f;
+	movementComponent->maxWalkSpeed = 8.0f;
 }
 
 // Called when the game starts or when spawned
@@ -39,6 +40,8 @@ void APhotoPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	float deltaTick = DeltaTime * 60.0f;
+
 	if (lockOnActor == nullptr) {
 		SetActorRotation(FRotator(0.0f, cameraPan, 0.0f));
 		camera->SetRelativeRotation(FRotator(cameraTilt, 0.0f, 0.0f));
@@ -52,6 +55,10 @@ void APhotoPlayer::Tick(float DeltaTime)
 	photoCameraComponent->SetWorldLocation(camera->GetComponentLocation());
 	photoCameraComponent->SetWorldRotation(camera->GetComponentRotation()); 
 
+	if (movementComponent->IsOnGround()) {
+		movementComponent->AddVelocity((GetActorForwardVector()*yInputAxis*movementComponent->acceleration*deltaTick));
+		movementComponent->AddVelocity((GetActorRightVector()*xInputAxis*movementComponent->acceleration*deltaTick));
+	}
 }
 
 // Called to bind functionality to input
@@ -93,35 +100,5 @@ void APhotoPlayer::Test2Function() {
 }
 
 void APhotoPlayer::JumpInput() {
-	if (IsOnGround(50.0f)) {
-		FVector forwardHop = yInputAxis * 8.0f * GetActorForwardVector();
-		FVector sideHop = xInputAxis * 8.0f * GetActorRightVector();
-		movementComponent->Jump(5.0f, forwardHop + sideHop);
-	}
-}
 
-bool APhotoPlayer::IsOnGround(float maxDistance) {
-	FHitResult traceOutputM;
-	FHitResult traceOutputF;
-	FHitResult traceOutputB;
-	FHitResult traceOutputL;
-	FHitResult traceOutputR;
-	FCollisionQueryParams ignoreParams;
-	ignoreParams.AddIgnoredActor(this);
-	ignoreParams.AddIgnoredComponent(collisionCapsule);
-
-	GetWorld()->LineTraceSingleByChannel(traceOutputM, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
-
-	return traceOutputM.IsValidBlockingHit();
-}
-
-FVector APhotoPlayer::GetGroundNormal(float maxDistance) {
-	FHitResult traceOutput;
-	FCollisionQueryParams ignoreParams;
-	ignoreParams.AddIgnoredActor(this);
-	ignoreParams.AddIgnoredComponent(collisionCapsule);
-
-	GetWorld()->LineTraceSingleByChannel(traceOutput, GetActorLocation(), GetActorLocation() - (GetActorUpVector() * maxDistance), ECC_WorldDynamic, ignoreParams);
-
-	return traceOutput.Normal;
 }
