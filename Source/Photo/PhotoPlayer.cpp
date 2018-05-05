@@ -1,19 +1,17 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "PhotoPlayer.h"
 #include "Engine.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Hitbox.h"
 #include "Components/InputComponent.h"
 
-// Sets default values
 APhotoPlayer::APhotoPlayer()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	collisionCapsule = CreateDefaultSubobject<UCapsuleComponent>("Collider");
 	collisionCapsule->SetCollisionProfileName("BlockAll");
 	RootComponent = collisionCapsule;
+	collisionCapsule->OnComponentBeginOverlap.AddDynamic(this, &APhotoPlayer::OnOverlap);
 	
 	camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	camera->AttachTo(RootComponent);
@@ -26,31 +24,43 @@ APhotoPlayer::APhotoPlayer()
 	movementComponent->gravitySpeed = 0.25f;
 	movementComponent->friction = 0.2f;
 	movementComponent->maxWalkSpeed = 8.0f;
+
+	targetVisual = CreateDefaultSubobject<UStaticMeshComponent>("Targeter");
+	targetVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-// Called when the game starts or when spawned
 void APhotoPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	cameraTilt = GetActorRotation().Pitch;
+	cameraPan = GetActorRotation().Yaw;
+
+	if (playerUI->IsValidLowLevel()) {
+		playerUI->parentPlayer = this;
+		playerUI->AddToViewport();
+	}
+
+	health = maxHealth;
+	flashCooldown = flashCooldownTime;
+	photoCooldown = photoCooldownTime;
 }
 
-// Called every frame
 void APhotoPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	float deltaTick = DeltaTime * 60.0f;
 
-	if (lockOnActor == nullptr) {
-		SetActorRotation(FRotator(0.0f, cameraPan, 0.0f));
-		camera->SetRelativeRotation(FRotator(cameraTilt, 0.0f, 0.0f));
+
+	if(lockOnNPC->IsValidLowLevel()) {
+		FRotator targetRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), lockOnNPC->GetActorLocation());
+		targetRotation.Normalize();
+		cameraPan = targetRotation.Yaw;
+		cameraTilt = targetRotation.Pitch;
 	}
-	else {
-		FRotator targetRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), lockOnActor->GetActorLocation());
-		SetActorRotation(FRotator(0, targetRotation.Yaw, 0));
-		camera->SetRelativeRotation(FRotator(targetRotation.Pitch, 0, 0));
-	}
+	SetActorRotation(FRotator(0.0f, cameraPan, 0.0f));
+	camera->SetRelativeRotation(FRotator(cameraTilt, 0.0f, 0.0f));
 
 	photoCameraComponent->SetWorldLocation(camera->GetComponentLocation());
 	photoCameraComponent->SetWorldRotation(camera->GetComponentRotation()); 
@@ -59,9 +69,44 @@ void APhotoPlayer::Tick(float DeltaTime)
 		movementComponent->AddVelocity((GetActorForwardVector()*yInputAxis*movementComponent->acceleration*deltaTick));
 		movementComponent->AddVelocity((GetActorRightVector()*xInputAxis*movementComponent->acceleration*deltaTick));
 	}
+
+	if (flashCooldown > flashCooldownTime) {
+		flashCooldown = flashCooldownTime;
+	}
+
+	if (flashCooldown != flashCooldownTime) {
+		flashCooldown += deltaTick;
+	}
+
+	if (photoCooldown > photoCooldownTime) {
+		photoCooldown = photoCooldownTime;
+	}
+
+	if (photoCooldown != photoCooldownTime) {
+		photoCooldown += deltaTick;
+	}
+
+	if (!lockOnNPC->IsValidLowLevel()) {
+		targetNPC = nullptr;
+		float targetDistance = -1.0f;
+		for (int i = 0; i < GetNPCsInView().Num(); i++) {
+			float currentDistance = FVector::Dist(GetActorLocation(), GetNPCsInView()[i]->GetActorLocation());
+			if (currentDistance < targetDistance || targetDistance == -1.0f) {
+				targetDistance = currentDistance;
+				targetNPC = GetNPCsInView()[i];
+			}
+		}
+	}
+
+	if (targetNPC != nullptr) {
+		targetVisual->SetVisibility(true);
+		targetVisual->SetWorldLocation(targetNPC->GetActorLocation() + FVector(0.0f,0.0f,200.0f));
+	}
+	else {
+		targetVisual->SetVisibility(false);
+	}
 }
 
-// Called to bind functionality to input
 void APhotoPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -69,18 +114,24 @@ void APhotoPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis("Mouse Y", this, &APhotoPlayer::UpdateMouseY);
 	PlayerInputComponent->BindAxis("Move X", this, &APhotoPlayer::UpdateInputX);
 	PlayerInputComponent->BindAxis("Move Y", this, &APhotoPlayer::UpdateInputY);
-	PlayerInputComponent->BindAction("Test Input", EInputEvent::IE_Released, this, &APhotoPlayer::TestInputFunction);
-	PlayerInputComponent->BindAction("Test 2", EInputEvent::IE_Released, this, &APhotoPlayer::Test2Function);
+	PlayerInputComponent->BindAction("Take Photo", EInputEvent::IE_Released, this, &APhotoPlayer::PhotoInput);
+	PlayerInputComponent->BindAction("Export Photos", EInputEvent::IE_Released, this, &APhotoPlayer::ExportInput);
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &APhotoPlayer::JumpInput);
+	PlayerInputComponent->BindAction("Lock", EInputEvent::IE_Released, this, &APhotoPlayer::LockInput);
+	PlayerInputComponent->BindAction("Flash", EInputEvent::IE_Pressed, this, &APhotoPlayer::FlashInput);
 }
 
 void APhotoPlayer::UpdateMouseX(float axisValue) {
-	cameraPan += axisValue;
+	if (!lockOnNPC->IsValidLowLevel()) {
+		cameraPan += axisValue;
+	}
 }
 
 void APhotoPlayer::UpdateMouseY(float axisValue) {
-	cameraTilt += axisValue;
-	cameraTilt = FMath::Clamp(cameraTilt, -85.0f, 85.0f);
+	if (!lockOnNPC->IsValidLowLevel()) {
+		cameraTilt += axisValue;
+		cameraTilt = FMath::Clamp(cameraTilt, -85.0f, 85.0f);
+	}
 }
 
 void APhotoPlayer::UpdateInputX(float axisValue) {
@@ -91,14 +142,95 @@ void APhotoPlayer::UpdateInputY(float axisValue) {
 	yInputAxis = axisValue;
 }
 
-void APhotoPlayer::TestInputFunction() {
+void APhotoPlayer::PhotoInput() {
 	photoCameraComponent->TakePhoto();
+	photoCooldown = 0.0f;
+	playerUI->ScreenBlink(FColor::Black);
+	for (int i = 0; i < GetNPCsInView().Num(); i++) {
+		if (GetNPCsInView()[i]->IsFlashed() && GetNPCsInView()[i]->npcName == "Golem") {
+			photoXP += 1000;
+		}
+		else {
+			if(GetNPCsInView()[i]->npcName != "Golem")
+				photoXP += 250;
+		}
+	}
 }
 
-void APhotoPlayer::Test2Function() {
+void APhotoPlayer::ExportInput() {
 	photoCameraComponent->ExportPhotos();
 }
 
-void APhotoPlayer::JumpInput() {
+void APhotoPlayer::Flash() {
+	if (flashCooldown == flashCooldownTime) {
+		bool flashedEnemy = false;
+		flashCooldown = 0.0f;
+		for (int i = 0; i < GetNPCsInView().Num(); i++) {
+			if (GetNPCsInView()[i]->Flash()) {
+				flashedEnemy = true;
+			}
+		}
 
+		if (flashedEnemy == true) {
+			playerUI->ScreenBlink(FColor::Orange);
+		}
+		else {
+			playerUI->ScreenBlink(FColor::White);
+		}
+	}
+}
+
+void APhotoPlayer::FlashInput() {
+	Flash();
+}
+
+void APhotoPlayer::JumpInput() {
+	if(movementComponent->IsOnGround())
+		movementComponent->SetVelocity((movementComponent->GetVelocityXY() * 1.25f) + (GetActorUpVector() * 15.0f));
+}
+
+void APhotoPlayer::LockInput() {
+	if (lockOnNPC->IsValidLowLevel()) {
+		lockOnNPC = nullptr;
+	}
+	else {
+		lockOnNPC = targetNPC;
+	}
+}
+
+void APhotoPlayer::OnOverlap(class UPrimitiveComponent* MainActor, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult) {
+	if (OtherComp->GetAttachParent()->IsA(UHitbox::StaticClass())) {
+		UHitbox* touchedHitbox = Cast<UHitbox, USceneComponent>(OtherComp->GetAttachParent());
+		if (touchedHitbox->isHitting ==  true && touchedHitbox->appliedHit == false) {
+			movementComponent->SetVelocity(movementComponent->GetVelocity()/1.25f);
+			movementComponent->AddVelocity((GetActorUpVector() * 10.0f) + (GetActorForwardVector() * -10.0f));
+			touchedHitbox->appliedHit = true;
+			health -= 25.0f;
+			flashCooldown = -flashCooldownTime;
+			playerUI->ScreenBlink(FColor::Red);
+		}
+	}
+}
+
+float APhotoPlayer::GetHealth() {
+	return health;
+}
+
+float APhotoPlayer::GetFlashCooldown() {
+	return flashCooldown;
+}
+
+float APhotoPlayer::GetPhotoCooldown() {
+	return photoCooldown;
+}
+
+TArray<ANPC*> APhotoPlayer::GetNPCsInView() {
+	TArray<ANPC*> npcsInView;
+	for (TActorIterator<ANPC> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		ANPC* creature = *ActorItr;
+		if(creature->WasRecentlyRendered(0.2f))
+			npcsInView.Add(creature);
+	}
+	return npcsInView;
 }

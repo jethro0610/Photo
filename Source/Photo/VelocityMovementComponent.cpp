@@ -1,16 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "VelocityMovementComponent.h"
 #include "Engine.h"
 
-// Sets default values for this component's properties
 UVelocityMovementComponent::UVelocityMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
-// Called when the game starts
 void UVelocityMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -18,8 +13,6 @@ void UVelocityMovementComponent::BeginPlay()
 	acceleration = maxWalkSpeed * friction;
 }
 
-
-// Called every frame
 void UVelocityMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -98,11 +91,13 @@ void UVelocityMovementComponent::MoveSliding(FVector deltaLocation, float deltaT
 		GetOwner()->SetActorLocation(GetOwner()->GetActorLocation() + deltaVector, true, &movementHit);
 	}
 
-	while (movementHit.IsValidBlockingHit()) {
-		if (movementHit.GetActor()->IsValidLowLevel() && movementHit.GetActor()->IsA(UPrimitiveComponent::StaticClass())) {
+	if (movementHit.IsValidBlockingHit()) {
+		if (movementHit.GetActor()->IsValidLowLevel()) {
 			UPrimitiveComponent* hitObject = Cast<UPrimitiveComponent, AActor>(movementHit.GetActor());
-			if(hitObject->IsSimulatingPhysics())
-				hitObject->AddForceAtLocation(deltaLocation, movementHit.Location);
+			if (hitObject->IsValidLowLevel() && hitObject->IsSimulatingPhysics()) {
+				hitObject->AddForceAtLocation(deltaLocation * 10000.0f, movementHit.Location);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("This is an on screen message!"));
+			}
 		}
 		FVector slideNormal = FVector::VectorPlaneProject(deltaVector, movementHit.Normal);
 		GetOwner()->SetActorLocation(GetOwner()->GetActorLocation() + slideNormal, true, &movementHit);
