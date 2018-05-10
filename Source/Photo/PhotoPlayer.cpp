@@ -27,6 +27,7 @@ APhotoPlayer::APhotoPlayer()
 
 	targetVisual = CreateDefaultSubobject<UStaticMeshComponent>("Targeter");
 	targetVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	targetVisual->SetVisibility(false);
 }
 
 void APhotoPlayer::BeginPlay()
@@ -145,7 +146,10 @@ void APhotoPlayer::UpdateInputY(float axisValue) {
 void APhotoPlayer::PhotoInput() {
 	photoCameraComponent->TakePhoto();
 	photoCooldown = 0.0f;
-	playerUI->ScreenBlink(FColor::Black);
+
+	if(playerUI->IsValidLowLevel())
+		playerUI->ScreenBlink(FColor::Black);
+
 	for (int i = 0; i < GetNPCsInView().Num(); i++) {
 		if (GetNPCsInView()[i]->IsFlashed() && GetNPCsInView()[i]->npcName == "Golem") {
 			photoXP += 1000;
@@ -172,10 +176,12 @@ void APhotoPlayer::Flash() {
 		}
 
 		if (flashedEnemy == true) {
-			playerUI->ScreenBlink(FColor::Orange);
+			if (playerUI->IsValidLowLevel())
+				playerUI->ScreenBlink(FColor::Orange);
 		}
 		else {
-			playerUI->ScreenBlink(FColor::White);
+			if (playerUI->IsValidLowLevel())
+				playerUI->ScreenBlink(FColor::White);
 		}
 	}
 }
@@ -185,8 +191,8 @@ void APhotoPlayer::FlashInput() {
 }
 
 void APhotoPlayer::JumpInput() {
-	if(movementComponent->IsOnGround())
-		movementComponent->SetVelocity((movementComponent->GetVelocityXY() * 1.25f) + (GetActorUpVector() * 15.0f));
+	//if(movementComponent->IsOnGround())
+		//movementComponent->SetVelocity((movementComponent->GetVelocityXY() * 1.25f) + (GetActorUpVector() * 15.0f));
 }
 
 void APhotoPlayer::LockInput() {
@@ -207,7 +213,8 @@ void APhotoPlayer::OnOverlap(class UPrimitiveComponent* MainActor, class AActor*
 			touchedHitbox->appliedHit = true;
 			health -= 25.0f;
 			flashCooldown = -flashCooldownTime;
-			playerUI->ScreenBlink(FColor::Red);
+			if (playerUI->IsValidLowLevel())
+				playerUI->ScreenBlink(FColor::Red);
 		}
 	}
 }
